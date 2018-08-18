@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+*.flv
+*.mp4
+*.mkv
+
+lib
+
+include
+
+DEBUG
