@@ -29,12 +29,9 @@ extern "C"
 #endif
 #endif
 
+#define OUTPUT_YUV420P 1
 
 int standard_play() {
-
-
-
-
 
 	AVFormatContext *pFormatCtx;
 	int i, videoIndex;
@@ -98,7 +95,7 @@ int standard_play() {
 	printf("-------------------------------------------------\n");
 	img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
 #if OUTPUT_YUV420P
-	fp_yuv = fopen("output.yuv", "wb+");
+	fp_yuv = fopen("test.yuv", "wb+");
 #endif
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
 		printf("Could not initialize SDL -%s \n", SDL_GetError());

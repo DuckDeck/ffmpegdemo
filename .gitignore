@@ -40,3 +40,7 @@ lib
 include
 
 DEBUG
+
+*.yuv
+*.opendb
+*.h264

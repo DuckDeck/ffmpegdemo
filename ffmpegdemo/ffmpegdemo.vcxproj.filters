@@ -35,5 +35,8 @@
     <ClCompile Include="standard_play_su.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pure_play.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
