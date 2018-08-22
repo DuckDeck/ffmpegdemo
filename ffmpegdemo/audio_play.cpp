@@ -33,7 +33,7 @@ extern "C"
 
 #define MAX_AUDIO_FRAME_SIZE 192000
 
-#define OUTPUT_PCM 1
+#define OUTPUT_PCM 1  //输出的PCM文件还是有问题
 
 #define USE_SDL 1
 
@@ -46,7 +46,7 @@ void fill_audio(void *udata, Uint8 *stream, int len) {
 	if (audio_len == 0)
 		return;
 	len = (len > audio_len ? audio_len : len);
-	SDL_MixAudio(stream, audio_pos, SDL_MIX_MAXVOLUME);
+	SDL_MixAudio(stream, audio_pos,len, SDL_MIX_MAXVOLUME);
 	audio_pos += len;
 	audio_len -= len;
 }
@@ -186,6 +186,5 @@ int audio_play() {
 	av_free(out_buffer);
 	avcodec_close(pCodecCtx);
 	avformat_close_input(&pFormatCtx);
-
 	return 0;
 }

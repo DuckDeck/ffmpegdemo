@@ -44,3 +44,5 @@ DEBUG
 *.yuv
 *.opendb
 *.h264
+*.mp3
+*.pcm
