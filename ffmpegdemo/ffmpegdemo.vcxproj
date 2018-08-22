@@ -154,8 +154,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="audio_play.cpp" />
     <ClCompile Include="ffmpegdemo.cpp" />
-    <ClCompile Include="pure_play.cpp" />
     <ClCompile Include="standard_play.cpp" />
     <ClCompile Include="standard_play_su.cpp" />
     <ClCompile Include="stdafx.cpp">
