@@ -22,7 +22,7 @@ extern "C"
 #endif
 #endif
 
-int flush_encoder(AVFormatContext *fmt_ctx, unsigned int stream_index) {
+int flush_audio_encoder(AVFormatContext *fmt_ctx, unsigned int stream_index) {
 	int ret;
 	int got_frame;
 	AVPacket enc_pkt;
@@ -149,7 +149,7 @@ int pcm_to_aac() {
 		}
 	}
 
-	ret = flush_encoder(pFormatCtx, 0);
+	ret = flush_audio_encoder(pFormatCtx, 0);
 	if (ret < 0 ) {
 		printf("Flushing encoder failed\n");
 		return -1;
