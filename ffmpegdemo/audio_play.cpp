@@ -69,7 +69,7 @@ int audio_play() {
 	struct SwrContext *au_convert_ctx;
 
 	FILE *pFile = NULL;
-	char url[] = "test.mp3";
+	char url[] = "asset/test.mp3";
 
 	av_register_all();
 	avformat_network_init();
@@ -115,7 +115,7 @@ int audio_play() {
 	}
 
 #if OUTPUT_PCM
-	pFile = fopen("output.pcm", "wb");
+	pFile = fopen("asset/output.pcm", "wb");
 #endif
 
 	packet = (AVPacket *)av_malloc(sizeof(AVPacket));

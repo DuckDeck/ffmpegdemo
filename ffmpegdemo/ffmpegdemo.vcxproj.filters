@@ -46,7 +46,7 @@
     <ClCompile Include="yuv_to_h264.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="basec.cpp">
+    <ClCompile Include="basic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

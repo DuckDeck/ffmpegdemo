@@ -155,7 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="audio_play.cpp" />
-    <ClCompile Include="basec.cpp" />
+    <ClCompile Include="basic.cpp" />
     <ClCompile Include="ffmpegdemo.cpp" />
     <ClCompile Include="pcm_to_aac.cpp" />
     <ClCompile Include="standard_play.cpp" />
