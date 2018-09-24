@@ -46,3 +46,6 @@ DEBUG
 *.h264
 *.mp3
 *.pcm
+*.y
+*.rgb
+asset

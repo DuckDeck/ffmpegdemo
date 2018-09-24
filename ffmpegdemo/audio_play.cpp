@@ -69,7 +69,7 @@ int audio_play() {
 	struct SwrContext *au_convert_ctx;
 
 	FILE *pFile = NULL;
-	char url[] = "asset/test.mp3";
+	char url[] = "asset/test.mp3"; //这个文件的左右声道很明显
 
 	av_register_all();
 	avformat_network_init();
@@ -175,6 +175,7 @@ int audio_play() {
 #if OUTPUT_PCM
 				//Write PCM
 				//目前写出的PCM文件还用不了，不清楚为什么
+				//没问题，是可以播放的，因为播放PCM没有文件信息，所以要加参数才能播放
 				fwrite(out_buffer, 1, out_buffer_size, pFile);
 #endif
 				index++;

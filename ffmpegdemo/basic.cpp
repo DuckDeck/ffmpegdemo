@@ -18,13 +18,14 @@ int yuv420_split(const char* url,int w,int h,int num){
     FILE *fp1 = fopen("asset/output_420_y.y","wb+");
     FILE *fp2 = fopen("asset/output_420_u.y","wb+");
     FILE *fp3 = fopen("asset/output_420_v.y","wb+");
-    unsigned char *pic = (unsigned char *)malloc(w * h * 3 / 2);
+    unsigned char *pic = (unsigned char *)malloc(w * h * 3 / 2); //pic 是个指针
     for(int i=0;i<num;i++){
         size_t count = fread(pic, 1, w * h * 3 / 2, fp);
         cout << "count " << count << endl;
-        fwrite(pic, 1, w * h, fp1);
-        fwrite(pic + w * h, 1, w * h / 4, fp2);
-        fwrite(pic + w * h * 5 / 4, 1, w * h / 4, fp3);
+		cout << "count " << pic << endl;
+        fwrite(pic, 1, w * h, fp1);								//从pic开始处取 w * h的数据量写到文件
+        fwrite(pic + w * h, 1, w * h / 4, fp2);					//从pic+w*h开始处取 w * h * 0.25的数据量写到文件
+        fwrite(pic + w * h * 5 / 4, 1, w * h / 4, fp3);			//从pic+w*h+0.25*w*h开始处取 w * h * 0.25的数据量写到文件
     }
     //YUV可能是这样保存的，y分量是保存在长*宽里，剩下的各1/4保存剩下的两个分量。所以取出来的时侯先取w * h，取u分量的时侯是取剩下的1/4，但是保存的时侯
     //无从pic指针最开始的地方保存w*H的份量，这也刚好是y的分量。然后保存u分量时，要从pic + w * h的地方开始写，写入量是w * h / 4
@@ -42,9 +43,9 @@ int yuv420_split(const char* url,int w,int h,int num){
 //yuv的YUV444P格式的像素数据文件分离成为三个文件：
 int yuv444_split(char *url, int w, int h, int num) {
 	FILE *fp = fopen(url, "rb+");
-	FILE *fp1 = fopen("Media/material/output_444_y.y", "wb+");
-	FILE *fp2 = fopen("Media/material/output_444_u.y", "wb+");
-	FILE *fp3 = fopen("Media/material/output_444_v.y", "wb+");
+	FILE *fp1 = fopen("asset/output_444_y.y", "wb+");
+	FILE *fp2 = fopen("asset/output_444_u.y", "wb+");
+	FILE *fp3 = fopen("asset/output_444_v.y", "wb+");
 	unsigned char *pic = (unsigned char *)malloc(w * h * 3);
 	for (int i = 0; i<num; i++) {
 		fread(pic, 1, w * h * 3, fp);
@@ -52,6 +53,7 @@ int yuv444_split(char *url, int w, int h, int num) {
 		fwrite(pic + w * h, 1, w * h, fp2);
 		fwrite(pic + w * h * 2, 1, w * h, fp3);
 	}
+	//和yuv420p比起来就简单多了刚好一个通道一个分量
 	free(pic);
 	fclose(fp);
 	fclose(fp1);
@@ -60,12 +62,13 @@ int yuv444_split(char *url, int w, int h, int num) {
 	return 0;
 }
 //(3) 将YUV420P像素数据去掉颜色（变成灰度图）
-//如果想把YUV格式像素数据变成灰度图像，只需要将U、V分量设置成128即可。这是因为U、V是图像中的经过偏置处理的色度分量。色度分量在偏置处理前的取值范围是-128至127，
-//这时候的无色对应的是“0”值。经过偏置后色度分量取值变成了0至255，因而此时的无色对应的就是128了。上述调用函数的代码运行后，
-//将会把一张分辨率为256x256的名称为lena_256x256_yuv420p.yuv的YUV420P格式的像素数据文件处理成名称为output_gray.yuv的YUV420P格式的像素数据文件
+//如果想把YUV格式像素数据变成灰度图像，只需要将U、V分量设置成128即可。这是因为U、V是图像中的经过偏置处理的色度分量。
+//色度分量在偏置处理前的取值范围是-128至127，//这时候的无色对应的是“0”值。经过偏置后色度分量取值变成了0至255，
+//因而此时的无色对应的就是128了。上述调用函数的代码运行后，//将会把一张分辨率为256x256的名称为lena_256x256_yuv420p.
+//yuv的YUV420P格式的像素数据文件处理成名称为output_gray.yuv的YUV420P格式的像素数据文件
 int yuv420_gray(char *url, int w, int h, int num) {
 	FILE *fp = fopen(url, "rb+");
-	FILE *fp1 = fopen("Media/material/output_yuv420_gray.yuv", "wb+");
+	FILE *fp1 = fopen("asset/output_yuv420_gray.yuv", "wb+");
 	unsigned char *pic = (unsigned char *)malloc(w * h * 3 / 2);
 	for (int i = 0; i < num; i++) {
 		fread(pic, 1, w * h * 3 / 2, fp);
@@ -80,10 +83,11 @@ int yuv420_gray(char *url, int w, int h, int num) {
 
 //(4)将YUV420P像素数据的亮度减半
 //如果打算将图像的亮度减半，只要将图像的每个像素的Y值取出来分别进行除以2的工作就可以了。图像的每个Y值占用1 Byte，取值范围是0至255，
-//对应C语言中的unsigned char数据类型。上述调用函数的代码运行后，将会把一张分辨率为256x256的名称为lena_256x256_yuv420p.yuv的YUV420P格式的像素数据文件处理成名称为output_half.yuv的YUV420P格式的像素数据文件
+//对应C语言中的unsigned char数据类型。上述调用函数的代码运行后，将会把一张分辨率为256x256的名称为lena_256x256_yuv420p.yuv
+//的YUV420P格式的像素数据文件处理成名称为output_half.yuv的YUV420P格式的像素数据文件
 int yuv420_harf_luminance(char *url, int w, int h, int num) {
 	FILE *fp = fopen(url, "rb+");
-	FILE *fp1 = fopen("Media/material/output_yuv420_harf_luminance.yuv", "wb+");
+	FILE *fp1 = fopen("asset/output_yuv420_harf_luminance.yuv", "wb+");
 	unsigned char *pic = (unsigned char *)malloc(w * h * 3 / 2);
 	for (int i = 0; i < num; i++) {
 		fread(pic, 1, w * h * 3 / 2, fp);
@@ -100,12 +104,12 @@ int yuv420_harf_luminance(char *url, int w, int h, int num) {
 	return 0;
 }
 //(5)将YUV420P像素数据的周围加上边框
-//图像的边框的宽度为border，本程序将距离图像边缘border范围内的像素的亮度分量Y的取值设置成了亮度最大值255。上述调用函数的代码运行后，
-//将会把一张分辨率为256x256的名称为lena_256x256_yuv420p.yuv的YUV420P格式的像素数据文件处理成名称为output_border.yuv的YUV420P格式
-//的像素数据文件
-int yuv420_add_Border(char *url, int w, int h, int border, int num) {
+//图像的边框的宽度为border，本程序将距离图像边缘border范围内的像素的亮度分量Y的取值设置成了亮度最大值255。
+//上述调用函数的代码运行后，将会把一张分辨率为256x256的名称为lena_256x256_yuv420p.yuv
+//的YUV420P格式的像素数据文件处理成名称为output_border.yuv的YUV420P格式的像素数据文件
+int yuv420_add_Border(const char *url, int w, int h, int border, int num) {
 	FILE *fp = fopen(url, "rb+");
-	FILE *fp1 = fopen("Media/material/output_yuv420_add_border.yuv", "wb+");
+	FILE *fp1 = fopen("asset/output_yuv420_add_border.yuv", "wb+");
 	unsigned char *pic = (unsigned char *)malloc(w * h * 3 / 2);
 	for (int i = 0; i < num; i++) {
 		fread(pic, 1, w * h * 3 / 2, fp);
@@ -129,7 +133,7 @@ int yuv420_add_Border(char *url, int w, int h, int border, int num) {
 //另一方面还要根据图像的宽度width和图像的高度height以及灰阶数量barnum确定每一个灰度条的宽度。有了这两方面信息之后，就可以生成相应的图片了。
 //上述调用函数的代码运行后，会生成一个取值范围从ymin-ymax，一共包含barnum个灰度条的YUV420P格式的测试图。
 //ymax是最左边的亮度，ymin是最右边的亮度
-int yuv420_graybar(int width, int height, int ymin, int ymax, int barnum, char *url_output)
+int yuv420_graybar(int width, int height, int ymin, int ymax, int barnum, const char *url_output)
 {
 	float barwidth; //每条bar的宽度
 	float lum_inc;  //每条bar高度的差值
@@ -221,9 +225,9 @@ double yuv420_psnr(char *url1, char *url2, int w, int h, int num) {
 //(8) 分离RGB24像素数据中的R、G、B分量
 int rgb24_split(char* url, int w, int h, int num) {
 	FILE *fp = fopen(url, "rb+");
-	FILE *fp1 = fopen("Media/material/output_r.y", "wb+");
-	FILE *fp2 = fopen("Media/material/output_g.y", "wb+");
-	FILE *fp3 = fopen("Media/material/output_b.y", "wb+");
+	FILE *fp1 = fopen("asset/output_r.y", "wb+");
+	FILE *fp2 = fopen("asset/output_g.y", "wb+");
+	FILE *fp3 = fopen("asset/output_b.y", "wb+");
 	unsigned char *pic = (unsigned char *)malloc(w * h * 3);
 	for (int i = 0; i < num; i++) {
 		fread(pic, 1, w * h * 3, fp);
@@ -239,4 +243,329 @@ int rgb24_split(char* url, int w, int h, int num) {
 	fclose(fp2);
 	fclose(fp3);
 	return 0;
+}
+
+//(9)将RGB24格式像素数据转换为YUV420P格式像素数据
+unsigned char clip_value(unsigned char x, unsigned char min_val, unsigned char max_val) {
+	if (x > max_val)
+		return max_val;
+	else if (x < min_val)
+		return min_val;
+	else
+		return x;
+}
+
+bool rgb24_to_yuv420p_buf(unsigned char *RgbBuf, int w, int h, unsigned char *yuvBuf) {
+	unsigned char *ptrY, *ptrU, *ptrV, *ptrRGB;
+	memset(yuvBuf, 0, w*h * 3 / 2);
+	ptrY = yuvBuf;
+	ptrU = yuvBuf + w * h;
+	ptrV = ptrU + (w * h / 4);
+
+	unsigned char y, u, v, r, g, b;
+	for (int j = 0; j < h; j++) {
+		ptrRGB = RgbBuf + w * j * 3;
+		for (int i = 0; i < w; i++) {
+			r = *(ptrRGB++);
+			g = *(ptrRGB++);
+			b = *(ptrRGB++);
+			y = (unsigned char)((66 * r + 129 * g + 25 * b + 128) >> 8) + 16;
+			u = (unsigned char)((-38 * r - 74 * g + 122 * b + 128) >> 8) + 128;
+			v = (unsigned char)((122 * r -94 * g - 18 * b + 128) >> 8) + 128;
+			*(ptrY++) = clip_value(y, 0, 255);
+			if (j % 2 == 0 && i % 2 == 0) {
+				*(ptrU++) = clip_value(u, 0, 255);
+			}
+			else {
+				if (i % 2 == 0) 
+					*(ptrV++) = clip_value(v, 0, 255);
+			}
+		}
+	}
+	return true;
+}
+
+int rgb24_to_yuv420p(const char *url_in, int w, int h, int num, const char* url_out) {
+	FILE *fp_in = fopen(url_in, "rb+");
+	FILE *fp_out = fopen(url_out, "wb+");
+	unsigned char *pic_rgb24 = (unsigned char *)malloc(w*h * 3);
+	unsigned char *pic_yuv420 = (unsigned char *)malloc(w*h * 3 / 2);
+	for (int i = 0; i < num; i++) {
+		fread(pic_rgb24, 1, w*h * 3, fp_in);
+		rgb24_to_yuv420p_buf(pic_rgb24, w, h, pic_yuv420);
+		fwrite(pic_yuv420, 1, w*h * 3 / 2, fp_out);
+	}
+	free(pic_rgb24);
+	free(pic_yuv420);
+	fclose(fp_in);
+	fclose(fp_out);
+	return 0;
+}
+
+//(11)生成RGB24格式的彩条测试图
+//从源代码可以看出，本程序循环输出“白黄青绿品红蓝黑”8种颜色的彩条。这8种颜色的彩条的R、G、B取值如下所示。
+//颜色
+//
+//(R, G, B)
+//
+//白
+//
+//(255, 255, 255)
+//
+//黄
+//
+//(255, 255, 0)
+//
+//青
+//
+//(0, 255, 255)
+//
+//绿
+//
+//(0, 255, 0)
+//
+//品
+//
+//(255, 0, 255)
+//
+//红
+//
+//(255, 0, 0)
+//
+//蓝
+//
+//(0, 0, 255)
+//
+//黑
+//
+//(0, 0, 0)
+
+int rgb24_colorbar(int width, int height, const char *url_out) {
+	unsigned char * data = NULL;
+	int barWidth;
+	char fileName[100] = { 0 };
+	FILE *fp = NULL;
+	int i = 0, j = 0;
+
+	data = (unsigned char*)malloc(width * height * 3);
+	barWidth = width / 8;
+	if ((fp = fopen(url_out, "wb+")) == NULL) {
+		printf("Error: Cannot create file!");
+		return -1;
+	}
+	for (j = 0; j < height; j++) {
+		for (i = 0; i < width; i++) {
+			int barNum = i / barWidth;
+			switch (barNum)
+			{
+			case 0: {
+				data[(j*width + i) * 3 + 0] = 255;
+				data[(j*width + i) * 3 + 1] = 255;
+				data[(j*width + i) * 3 + 2] = 255;
+				break;
+			}
+			case 1: {
+				data[(j*width + i) * 3 + 0] = 255;
+				data[(j*width + i) * 3 + 1] = 255;
+				data[(j*width + i) * 3 + 2] = 0;
+				break;
+			}
+			case 2: {
+				data[(j*width + i) * 3 + 0] = 0;
+				data[(j*width + i) * 3 + 1] = 255;
+				data[(j*width + i) * 3 + 2] = 0;
+				break;
+			}
+			case 3: {
+				data[(j*width + i) * 3 + 0] = 0;
+				data[(j*width + i) * 3 + 1] = 255;
+				data[(j*width + i) * 3 + 2] = 0;
+				break;
+			}
+			case 4: {
+				data[(j*width + i) * 3 + 0] = 255;
+				data[(j*width + i) * 3 + 1] = 0;
+				data[(j*width + i) * 3 + 2] = 255;
+				break;
+			}
+			case 5: {
+				data[(j*width + i) * 3 + 0] = 255;
+				data[(j*width + i) * 3 + 1] = 0;
+				data[(j*width + i) * 3 + 2] = 0;
+				break;
+			}
+			case 6: {
+				data[(j*width + i) * 3 + 0] = 0;
+				data[(j*width + i) * 3 + 1] = 0;
+				data[(j*width + i) * 3 + 2] = 255;
+				break;
+			}
+			case 7: {
+				data[(j*width + i) * 3 + 0] = 0;
+				data[(j*width + i) * 3 + 1] = 0;
+				data[(j*width + i) * 3 + 2] = 0;
+				break;
+			}
+			default:
+				break;
+			}
+		}
+	}
+	fwrite(data, width*height * 3, 1, fp);
+	fclose(fp);
+	free(data);
+	return 0;
+}
+
+//(11)分离PCM16LE双声道音频采样数据的左声道和右声道
+//Test OK
+int pcm16le_split_left_right(const char *url) {
+	FILE *fp = fopen(url, "rb+");
+	if (fp == NULL) {
+		printf("Error: Cannot open file!");
+		return -1;
+	}
+	FILE *fp_left = fopen("asset/left_music_output.pcm", "wb+");
+	FILE *fp_right = fopen("asset/right_music_output.pcm", "wb+");
+
+	unsigned char *sample = (unsigned char *)malloc(4);
+	while (!feof(fp)) {
+		fread(sample, 1, 4, fp);  //一次读取4个Byte
+		fwrite(sample, 1, 2, fp_left);  //前面两个放左边
+		fwrite(sample + 2, 1, 2, fp_right);//后两两个放右边
+	}
+	free(sample);
+	fclose(fp);
+	fclose(fp_left);
+	fclose(fp_right);
+	return 0;
+}
+
+//(12)将PCM16LE双声道音频采样数据中左声道的音量降一半
+//Test OK
+
+int pcm16le_halfvolume_left_channel(const char *url) {
+	FILE *fp = fopen(url, "rb+");
+	if (fp == NULL) {
+		printf("Error: Cannot open file!");
+		return -1;
+	}
+	FILE *fp_half = fopen("asset/output_leftchannel_halfvolume.pcm", "wb+");
+	int cnt = 0;
+	unsigned char *sample = (unsigned char *)malloc(4);
+	while (!feof(fp))
+	{
+		short * samplenum = NULL;
+		fread(sample, 1, 4, fp);
+		//printf("current fp location: %d\n", fp);
+		samplenum = (short *)sample;
+		*samplenum = *samplenum / 2;
+		fwrite(sample, 1, 2, fp_half);
+		fwrite(sample + 2, 1, 2, fp_half);
+		cnt++;
+	}
+	printf("Sample Cnt:%d\n", cnt);
+	free(sample);
+	fclose(fp);
+	fclose(fp_half);
+	return 0;
+}
+
+//(13)将PCM16LE双声道音频采样数据的声音速度提高一倍
+//Test OK
+int pcm16le_speedX2(const char *url) {
+	FILE *fp = fopen(url, "rb+");
+	if (fp == NULL) {
+		printf("Error: Cannot open file!");
+		return -1;
+	}
+	int cnt = 0;
+	FILE *fp_spped = fopen("asset/output_speedX2.pcm", "wb+");
+	unsigned char *sample = (unsigned char *)malloc(4);
+	while (!feof(fp))
+	{
+		fread(sample, 1, 4, fp);
+		if (cnt % 2 != 0) {
+			fwrite(sample, 1, 2, fp_spped);
+			fwrite(sample + 2, 1, 2, fp_spped);
+		}
+		cnt++;
+	}
+	printf("Sample Cnt:%d\n", cnt);
+	free(sample);
+	fclose(fp);
+	fclose(fp_spped);
+	return 0;
+}
+
+//(14)将PCM16LE双声道音频采样数据转换为PCM8音频采样数据
+//PCM16LE格式的采样数据的取值范围是 - 32768到32767，而PCM8格式的采样数据的取值范围是0到255。
+//所以PCM16LE转换到PCM8需要经过两个步骤：第一步是将 - 32768到32767的16bit有符号数值转换为
+//- 128到127的8bit有符号数值，第二步是将 - 128到127的8bit有符号数值转换为0到255的8bit无符号数值。
+//在本程序中，16bit采样数据是通过short类型变量存储的，而8bit采样数据是通过unsigned char类型存储的
+//Test Fail
+int pcm16le_to_pcm8(const char *url) {
+	FILE *fp = fopen(url, "rb+");
+	if (fp == NULL) {
+		printf("Error: Cannot open file!");
+		return -1;
+	}
+	int cnt = 0;
+	FILE *fp8 = fopen("asset/output_to_pcm8.pcm", "wb+");
+	unsigned char *sample = (unsigned char *)malloc(4);
+	while (!feof(fp))
+	{
+		short *samplenum16 = NULL;
+		char samplenum8 = 0;
+		unsigned char samplenum8_u = 0;
+		fread(sample, 1, 4, fp);
+		samplenum16 = (short*)sample;
+		samplenum8 = (*samplenum16) >> 8;
+		samplenum8_u = samplenum8 + 128;
+		fwrite(&samplenum8_u, 1, 1, fp8);
+		samplenum16 = (short*)(sample + 2);
+		samplenum8 = (*samplenum16) >> 8;
+		samplenum8_u = samplenum8 + 128;
+		fwrite(&samplenum8_u, 1, 1, fp8);
+		cnt++;
+	}
+	printf("Sample Cnt:%d\n", cnt);
+	free(sample);
+	fclose(fp);
+	fclose(fp8);
+	return 0;
+}
+
+//将从PCM16LE单声道音频采样数据中截取一部分数据
+
+int pcm16le_cut_singlechanel(const char* url, int start_num, int dur_num) {
+		FILE *fp = fopen(url, "rb+");
+		if (fp == NULL) {
+			printf("Error: Cannot open file!");
+			return -1;
+		}
+		int cnt = 0;
+		FILE * fp_cut = fopen("asset/output_cut_singlechanel.pcm", "wb+");
+		FILE *fp_stat = fopen("asset/output_cut.txt", "wb+");
+		unsigned char *sample = (unsigned char *)malloc(4);
+		while (!feof(fp))
+		{
+			fread(sample, 1, 2, fp);
+			if (cnt > start_num && cnt <= (start_num + dur_num)) {
+				fwrite(sample, 1, 2, fp_cut);
+				short samplenum = sample[1];
+				samplenum = samplenum * 256;
+				samplenum = samplenum + sample[0];
+				fprintf(fp_stat, "%6d", samplenum);
+				if (cnt % 10 == 0)
+					fprintf(fp_stat, "\n", samplenum);
+			}
+			cnt++;
+		}
+		printf("Sample Cnt:%d\n", cnt);
+		free(sample);
+		fclose(fp);
+		fclose(fp_cut);
+		fclose(fp_stat);
+		return 0;
 }
