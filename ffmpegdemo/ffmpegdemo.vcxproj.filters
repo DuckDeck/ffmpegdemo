@@ -49,5 +49,14 @@
     <ClCompile Include="basic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pure_play.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="opencv.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="face.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

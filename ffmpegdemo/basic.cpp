@@ -504,6 +504,10 @@ int pcm16le_speedX2(const char *url) {
 //- 128到127的8bit有符号数值，第二步是将 - 128到127的8bit有符号数值转换为0到255的8bit无符号数值。
 //在本程序中，16bit采样数据是通过short类型变量存储的，而8bit采样数据是通过unsigned char类型存储的
 //Test Fail
+//对于8bit 的PCM文件有两种形式，一种是中心 点为0的，还有一种是中心点为128的。
+//下面的这个例子是加上了128的，所以中心点是128的，当然以0为中心点也没问题
+//把fwrite(&samplenum8_u, 1, 1, fp8);改成fwrite(&samplenum8, 1, 1, fp8)就行
+//这个时侯打开PCM文件要选择8bit PCM unsigned
 int pcm16le_to_pcm8(const char *url) {
 	FILE *fp = fopen(url, "rb+");
 	if (fp == NULL) {
@@ -519,11 +523,11 @@ int pcm16le_to_pcm8(const char *url) {
 		char samplenum8 = 0;
 		unsigned char samplenum8_u = 0;
 		fread(sample, 1, 4, fp);
-		samplenum16 = (short*)sample;
+		samplenum16 = (short *)sample;
 		samplenum8 = (*samplenum16) >> 8;
 		samplenum8_u = samplenum8 + 128;
 		fwrite(&samplenum8_u, 1, 1, fp8);
-		samplenum16 = (short*)(sample + 2);
+		samplenum16 = (short *)(sample + 2);
 		samplenum8 = (*samplenum16) >> 8;
 		samplenum8_u = samplenum8 + 128;
 		fwrite(&samplenum8_u, 1, 1, fp8);
@@ -537,7 +541,7 @@ int pcm16le_to_pcm8(const char *url) {
 }
 
 //将从PCM16LE单声道音频采样数据中截取一部分数据
-
+//Test OK
 int pcm16le_cut_singlechanel(const char* url, int start_num, int dur_num) {
 		FILE *fp = fopen(url, "rb+");
 		if (fp == NULL) {
@@ -568,4 +572,110 @@ int pcm16le_cut_singlechanel(const char* url, int start_num, int dur_num) {
 		fclose(fp_cut);
 		fclose(fp_stat);
 		return 0;
+}
+
+//将PCM16LE双声道音频采样数据转换为WAVE格式音频数据
+//WAVE文件是一种RIFF格式的文件。其基本块名称是“WAVE”，其中包含了两个子块“fmt”和“data”。
+//从编程的角度简单说来就是由WAVE_HEADER、WAVE_FMT、WAVE_DATA、采样数据共4个部分组成。它的结构如下所示。
+//WAVE_HEADER
+
+//WAVE_FMT
+
+//WAVE_DATA
+
+//PCM数据
+
+
+//其中前3部分的结构如下所示。在写入WAVE文件头的时候给其中的每个字段赋上合适的值就可以了。
+//但是有一点需要注意：WAVE_HEADER和WAVE_DATA中包含了一个文件长度信息的dwSize字段，
+//该字段的值必须在写入完音频采样数据之后才能获得。因此这两个结构体最后才写入WAVE文件中。
+//文件打开失败，应该是信息写入出现了错误，检查代码好像没什么问题
+//memcpy(pcmFMT.fccID, "fmt ", strlen("fmt ")) fmt后面加上空格就行了，很神奇
+int pcm16le_to_wav(const char* pcm_url, int channels, int sample_rate,const char *wav_url) {
+
+
+	typedef struct WAVE_HEADER
+	{
+		char fccID[4];
+		unsigned long dwSize;
+		char fccType[4];
+	}WAVE_HEADER;
+
+	typedef struct WAVE_FMT
+	{
+		char fccID[4];
+		unsigned long dwSize;
+		unsigned short wFormatTag;
+		unsigned short wChannels;
+		unsigned long dwSamplesPerSec;
+		unsigned long dwAvgBytesPerSec;
+		unsigned short wBlockAlign;
+		unsigned short uiBitsPerSample;
+	}WAVE_FMT;
+
+	typedef struct WAVE_DATA
+	{
+		char fccID[4];
+		unsigned long dwSize;
+	}WAVE_DATA;
+
+	if (channels == 0 || sample_rate == 0) {
+		channels = 2;
+		sample_rate = 44100;
+	}
+	int bits = 16;
+	WAVE_HEADER pcmHEADER;
+	WAVE_FMT pcmFMT;
+	WAVE_DATA pcmDATA;
+
+	unsigned short m_pcmData;
+	FILE *fp, *fp_out;
+
+	fp = fopen(pcm_url, "rb+");
+	if (fp == NULL) {
+		printf("Error: Cannot open input PCM file!");
+		return -1;
+	}
+	fp_out = fopen(wav_url, "wb+");
+	if (fp_out == NULL) {
+		printf("Error: Cannot create output file!");
+		return -1;
+	}
+
+	//WAVE_HEADER
+	memcpy(pcmHEADER.fccID, "RIFF", strlen("RIFF"));
+	memcpy(pcmHEADER.fccType, "WAVE", strlen("WAVE"));
+	fseek(fp_out, sizeof(WAVE_HEADER), 1);
+
+	pcmFMT.dwSamplesPerSec = sample_rate;
+	pcmFMT.dwAvgBytesPerSec = pcmFMT.dwSamplesPerSec * sizeof(m_pcmData);
+	pcmFMT.uiBitsPerSample = bits;
+	memcpy(pcmFMT.fccID, "fmt ", strlen("fmt ")); //注意fmt后面有一个空格
+	pcmFMT.dwSize = 16;
+	pcmFMT.wBlockAlign = 2;
+	pcmFMT.wChannels = channels;
+	pcmFMT.wFormatTag = 1;
+
+	fwrite(&pcmFMT, sizeof(WAVE_FMT), 1, fp_out);
+
+	memcpy(pcmDATA.fccID,"data",strlen("data"));
+	pcmDATA.dwSize = 0;
+	fseek(fp_out, sizeof(WAVE_DATA), SEEK_CUR);
+
+	fread(&m_pcmData, sizeof(unsigned short), 1, fp);
+	while (!feof(fp))
+	{
+		pcmDATA.dwSize += 2;
+		fwrite(&m_pcmData, sizeof(unsigned short), 1, fp_out);
+		fread(&m_pcmData, sizeof(unsigned short), 1, fp);
+	}
+	pcmHEADER.dwSize = 44 + pcmDATA.dwSize;
+	rewind(fp_out);
+	fwrite(&pcmHEADER, sizeof(WAVE_HEADER), 1, fp_out);
+	fseek(fp_out, sizeof(WAVE_FMT), SEEK_CUR);
+	fwrite(&pcmDATA, sizeof(WAVE_DATA), 1, fp_out);
+	fclose(fp);
+	fclose(fp_out);
+
+	return 0;
 }

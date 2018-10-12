@@ -69,11 +69,11 @@ int yuv_to_h264() {
 	int framecnt = 0;
 	
 	//input_file
-	FILE *in_file = fopen("test.yuv", "rb");
+	FILE *in_file = fopen("asset/test.yuv", "rb");
 	int in_w = 400, in_h = 226;
 	int framenum = 500;
 	//output_file
-	const char* out_file = "test.h264";
+	const char* out_file = "asset/test.h264";
 
 	av_register_all();
 	pFormatCtx = avformat_alloc_context();

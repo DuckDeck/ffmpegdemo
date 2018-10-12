@@ -10,8 +10,8 @@ extern "C"
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
 #include "libavutil/imgutils.h"
-#include "sdl/SDL.h"
-#include "sdl/SDL_main.h"
+#include "SDL.h"
+#include "SDL_main.h"
 };
 #else
 //Linux...
@@ -31,24 +31,24 @@ extern "C"
 
 #define SFM_REFRESH_EVENT (SDL_USEREVENT+1)
 #define SFM_BREAK_EVENT (SDL_USEREVENT+2)
-int thread_exit = 0;
+int thread_exit_su = 0;
 
-int thread_pause = 0;
+int thread_pause_su = 0;
 
-int sfp_refresh_thread(void * opaque) {
-	thread_exit = 0;
-	thread_pause = 0;
-	while (!thread_exit)
+int sfp_refresh_thread_su(void * opaque) {
+	thread_exit_su = 0;
+	thread_pause_su = 0;
+	while (!thread_exit_su)
 	{
-		if (!thread_pause) {
+		if (!thread_pause_su) {
 			SDL_Event event;
 			event.type = SFM_REFRESH_EVENT;
 			SDL_PushEvent(&event);
 		}
 		SDL_Delay(40);
 	}
-	thread_exit = 0;
-	thread_pause = 0;
+	thread_exit_su = 0;
+	thread_pause_su = 0;
 	SDL_Event event;
 	event.type = SFM_BREAK_EVENT;
 	SDL_PushEvent(&event);
@@ -144,7 +144,7 @@ int standard_play_su() {
 	sdlRect.h = screen_h;
 
 	packet = (AVPacket *)av_malloc(sizeof(AVPacket));
-	video_tid = SDL_CreateThread(sfp_refresh_thread, NULL, NULL);
+	video_tid = SDL_CreateThread(sfp_refresh_thread_su, NULL, NULL);
 
 	//------------SDL End------------
 	//Event Loop
@@ -156,7 +156,7 @@ int standard_play_su() {
 			while (1)
 			{
 				if (av_read_frame(pFormatCtx, packet) < 0)
-					thread_exit = 1;
+					thread_exit_su = 1;
 				if (packet->stream_index == videoindex)
 					break;
 			}
@@ -179,10 +179,10 @@ int standard_play_su() {
 		}
 		else if (event.type == SDL_KEYDOWN) {
 			if (event.key.keysym.sym == SDLK_SPACE)
-				thread_pause = !thread_pause;
+				thread_pause_su = !thread_pause_su;
 		}
 		else if (event.type == SDL_QUIT) {
-			thread_exit = 1;
+			thread_exit_su = 1;
 		}
 		else if(event.type == SFM_BREAK_EVENT){
 			break;

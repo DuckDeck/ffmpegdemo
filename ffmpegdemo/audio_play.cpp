@@ -11,8 +11,8 @@ extern "C"
 #include "libswscale/swscale.h"
 #include "libavutil/imgutils.h"
 #include "libswresample/swresample.h"
-#include "sdl/SDL.h"
-#include "sdl/SDL_main.h"
+#include "SDL.h"
+#include "SDL_main.h"
 };
 #else
 //Linux...

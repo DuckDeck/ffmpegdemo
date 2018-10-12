@@ -69,10 +69,10 @@ int pcm_to_aac() {
 
 	FILE *in_file = NULL;	                        //Raw PCM data
 	int framenum = 1000;                          //Audio frame number
-	const char* out_file = "tdjm.aac";          //Output URL
+	const char* out_file = "asset/output.aac";          //Output URL
 	int i;
 
-	in_file = fopen("test.pcm", "rb");
+	in_file = fopen("asset/output.pcm", "rb");
 
 	av_register_all();
 
@@ -107,7 +107,8 @@ int pcm_to_aac() {
 		printf("Can not find encoder!\n");
 		return -1;
 	}
-	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
+	int  avcodec_open2_result = avcodec_open2(pCodecCtx, pCodec, NULL);
+	if (avcodec_open2_result < 0) {
 		printf("Failed to open encoder!\n");
 		return -1;
 	}

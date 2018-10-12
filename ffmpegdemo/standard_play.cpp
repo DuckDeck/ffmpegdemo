@@ -10,8 +10,8 @@ extern "C"
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
 #include "libavutil/imgutils.h"
-#include "sdl/SDL.h"
-#include "sdl/SDL_main.h"
+#include "SDL.h"
+#include "SDL_main.h"
 };
 #else
 //Linux...
@@ -43,7 +43,7 @@ int standard_play() {
 	int y_size;
 	int ret, got_picture;
 	struct SwsContext *img_convert_ctx;
-	char filepath[] = "test.flv";
+	char filepath[] = "asset/test.flv";
 
 	int screen_w = 0, screen_h = 0;
 	SDL_Window *screen;
