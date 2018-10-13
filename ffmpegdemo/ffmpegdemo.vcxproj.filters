@@ -58,5 +58,11 @@
     <ClCompile Include="face.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="catpure_jpg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="play_with_watermark.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

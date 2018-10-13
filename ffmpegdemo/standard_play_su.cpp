@@ -78,7 +78,7 @@ int standard_play_su() {
 	SDL_Event event;
 
 	struct  SwsContext *img_convert_ctx;
-	char filepath[] = "test.flv";
+	char filepath[] = "asset/test.flv";
 	av_register_all();
 	avformat_network_init();
 	pFormatCtx = avformat_alloc_context();
