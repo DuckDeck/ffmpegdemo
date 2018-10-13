@@ -34,7 +34,8 @@
 *.flv
 *.mp4
 *.mkv
-
+.vs
+x64
 lib
 
 include
