@@ -78,7 +78,7 @@ int standard_play_su() {
 	SDL_Event event;
 
 	struct  SwsContext *img_convert_ctx;
-	char filepath[] = "asset/test.flv";
+	char filepath[] = "asset/test.mp4";
 	av_register_all();
 	avformat_network_init();
 	pFormatCtx = avformat_alloc_context();
@@ -114,7 +114,7 @@ int standard_play_su() {
 	pFrameYUV = av_frame_alloc();
 	out_buffer = (unsigned char*)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1));
 	av_image_fill_arrays(pFrameYUV->data, pFrameYUV->linesize, out_buffer, AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
-	packet = (AVPacket *)av_malloc(sizeof(AVPacket));
+
 	printf("--------------- File Information ----------------\n");
 	av_dump_format(pFormatCtx, 0, filepath, 0);
 	printf("-------------------------------------------------\n");

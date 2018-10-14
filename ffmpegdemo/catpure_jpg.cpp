@@ -24,25 +24,9 @@ extern "C"
 };
 #endif
 #endif
-
-
 #define MAX_PATH 128
 
-cv::Mat avframe_to_mat(AVFrame* pFrame) {
-	int width = pFrame->width, height = pFrame->height;
-	cv::Mat tmp_img = cv::Mat::zeros(height*3/2, width, CV_8UC1);
-	memcpy(tmp_img.data, pFrame->data[0], width * height);
-	memcpy(tmp_img.data + width * height, pFrame->data[1], width * height / 4);
-	memcpy(tmp_img.data + width * height * 5 / 4, pFrame->data[2], width * height / 4);
-	cv::imshow("yuv_show", tmp_img);
-	cv::Mat bgr;
-	cv::cvtColor(tmp_img, bgr, CV_YUV2BGRA_I420);
-	cv::imshow("bgr_show", bgr);
-	cv::waitKey(1);
-	return bgr;
-}
-
-int MyWriteJPEG(AVFrame* pFrame, int width, int height, int iIndex)
+int WriteJPEG(AVFrame* pFrame, int width, int height, int iIndex)
 {
 	// 输出文件路径
 	char out_file[MAX_PATH] = { 0 };
@@ -86,7 +70,6 @@ int MyWriteJPEG(AVFrame* pFrame, int width, int height, int iIndex)
 	av_dump_format(pFormatCtx, 0, out_file, 1);
 	// End Output some information
 
-
 	// 查找解码器
 	AVCodec* pCodec = avcodec_find_encoder(pCodecCtx->codec_id);
 	if (!pCodec)
@@ -125,20 +108,13 @@ int MyWriteJPEG(AVFrame* pFrame, int width, int height, int iIndex)
 	av_free_packet(&pkt);
 	//Write Trailer
 	av_write_trailer(pFormatCtx);
-
-
 	printf("Encode Successful.\n");
-
-
 	if (pAVStream)
 	{
 		avcodec_close(pAVStream->codec);
 	}
-
 	avio_close(pFormatCtx->pb);
 	avformat_free_context(pFormatCtx);
-
-
 	return 0;
 }
 
@@ -156,11 +132,8 @@ int capture_jpg(const char* videoPath) {
 	int frameFinished;
 	int PictureSize;
 	uint8_t *outBuff;
-
-
 	//注册编解码器
 	av_register_all();
-
 	// 分配AVFormatContext
 	pFormatCtx = avformat_alloc_context();
 
@@ -244,18 +217,20 @@ int capture_jpg(const char* videoPath) {
 
 			if (frameFinished)
 			{
-				sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize, 
-					0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
-				memcpy(pCvMat.data, out_buffer, size);
-				cv::imshow("RGB", pCvMat);
-				testface(pCvMat);
-				i++;
+				//sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize,0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
+				//memcpy(pCvMat.data, out_buffer, size);
+				//cv::imshow("RGB", pCvMat);
+				//testface(pCvMat);
+				
 				printf("the frame num is %d",i);
 				//break;
-				cvWaitKey(1);
-				
+				//cvWaitKey(1);
+				//上面用于人脸识别
 				//break;
-				//MyWriteJPEG(pFrame, pCodecCtx->width, pCodecCtx->height, i++);
+				if (i % 10 == 0) { //每10帧出一张图片，不然太多了
+					WriteJPEG(pFrame, pCodecCtx->width, pCodecCtx->height, i);
+				}
+				i++;
 			}
 		}
 		else
