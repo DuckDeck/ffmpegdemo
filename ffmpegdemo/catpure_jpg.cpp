@@ -217,19 +217,19 @@ int capture_jpg(const char* videoPath) {
 
 			if (frameFinished)
 			{
-				//sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize,0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
-				//memcpy(pCvMat.data, out_buffer, size);
-				//cv::imshow("RGB", pCvMat);
-				//testface(pCvMat);
+				sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize,0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
+				memcpy(pCvMat.data, out_buffer, size);
+				cv::imshow("RGB", pCvMat);
+				testface(pCvMat);
 				
 				printf("the frame num is %d",i);
 				//break;
-				//cvWaitKey(1);
+				cvWaitKey(1);
 				//上面用于人脸识别
 				//break;
-				if (i % 10 == 0) { //每10帧出一张图片，不然太多了
-					WriteJPEG(pFrame, pCodecCtx->width, pCodecCtx->height, i);
-				}
+				//if (i % 10 == 0) { //每10帧出一张图片，不然太多了
+					//WriteJPEG(pFrame, pCodecCtx->width, pCodecCtx->height, i);
+				//}
 				i++;
 			}
 		}
