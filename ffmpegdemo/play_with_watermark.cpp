@@ -41,7 +41,7 @@ extern "C"
 
 
 //drawtext = fontfile = arial.ttf:fontcolor = red : fontsize = 30 : text = 'Lei Xiaohua' : x = 50 : y = 50
-const char * filer_descr = "drawbox=10:20:200:60:red@0.5";
+const char * filer_descr = "drawbox=20:20:200:120:blue@0.5";
 static AVFormatContext *pFormatCtx;
 static AVCodecContext *pCodecCtx;
 AVFilterContext *buffersink_ctx;
