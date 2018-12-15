@@ -76,11 +76,68 @@ Mat bright(Mat m1,float alpha,float beta) {
 }
 
 Mat shape(Mat m1) {
-	line(m1, Point(20, 30), Point(300, 300), Scalar(0, 0, 255),3,LINE_8);
+	line(m1, Point(20, 30), Point(30, 400), Scalar(0, 0, 255),3,LINE_AA);//LINE_8 线不是直的
 	rectangle(m1, Rect(200, 100, 300, 400), Scalar(0, 255, 0), 5, LINE_8);
+	ellipse(m1, Point(m1.cols / 2, m1.rows / 2), Size(300, 200), 45, 90, 270, Scalar(255, 0, 0), 5, LINE_8);
+	ellipse(m1, Point(m1.cols / 2 + 10, m1.rows / 2 + 10), Size(300, 200), 45, 0, 90, Scalar(255, 0, 0), 5, LINE_8);
+	ellipse(m1, Point(m1.cols / 2 + 10, m1.rows / 2 + 10), Size(300, 200), 45, 270, 360, Scalar(255, 0, 0), 5, LINE_8);
+	circle(m1, Point(m1.cols / 2, m1.rows / 2), 100, Scalar(255, 155, 0), 5, LINE_8);
+	
+	putText(m1, "Shadow_Edge", Point(400, 400), CV_FONT_HERSHEY_COMPLEX, 3.0, Scalar(255, 0, 255), 4, 8);
+	Point pt[1][6];
+	pt[0][0] = Point(100, 100);
+	pt[0][1] = Point(100, 200);
+	pt[0][2] = Point(200, 300);
+	pt[0][3] = Point(300, 400);
+	pt[0][4] = Point(400, 200);
+	pt[0][5] = Point(200, 100);
+	const Point* ppts[] = { pt[0] };
+	int npt[] = { 6 };
+	fillPoly(m1, ppts, npt, 1, Scalar(0, 255, 255), 8);
+
+	//随机加一条线
+	RNG rng(12345);
+	Point p1;
+	Point p2;
+	p1.x = rng.uniform(0, m1.cols);
+	p2.x = rng.uniform(0, m1.cols);
+	p1.y = rng.uniform(0, m1.rows);
+	p2.y = rng.uniform(0, m1.rows);
+	Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+	line(m1, p1, p2, color, 3, LINE_AA);
+
 	return m1;
 }
 
+//随机生成线
+Mat randomLine() {
+	Mat m1 = Mat(500, 500, 16);
+	RNG rng(12345);
+	Point p1;
+	Point p2;
+	for (int i = 0; i < 10; i++)
+	{
+		
+		p1.x = rng.uniform(0, m1.cols);
+		p2.x = rng.uniform(0, m1.cols);
+		p1.y = rng.uniform(0, m1.rows);
+		p2.y = rng.uniform(0, m1.rows);
+		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+		if (waitKey(50)>0) {
+			break;
+		}
+		line(m1, p1, p2, color, 3, LINE_AA);
+	}
+	return m1;
+}
+
+Mat blur(Mat m1) {
+	Mat m2 = Mat::zeros(m1.size(), m1.type());
+
+	//blur(m1, m2, Size(10, 10), Point(-1, -1));
+	GaussianBlur(m1, m2, Size(7, 7), 11, 11); //只能用奇数
+	return m2;
+}
 int opencvtest()
 {
 	Mat m1 = imread("asset/001.jpg");
@@ -103,7 +160,7 @@ int opencvtest()
 	namedWindow("opencv test", CV_WINDOW_AUTOSIZE);
 	imshow("opencv test", m2);
 
-	Mat m3 = shape(m1);
+	Mat m3 = blur(m1);
 
 	namedWindow("brightness", CV_WINDOW_AUTOSIZE);
 	imshow("brightness", m3);
