@@ -5,7 +5,8 @@
 using namespace cv;
 using namespace std;
 
-
+int element_size = 3;
+Mat m;
 //锐度算法
 Mat acuity(Mat m) {
 	Mat res = Mat::zeros(m.size(), m.type());
@@ -131,40 +132,119 @@ Mat randomLine() {
 	return m1;
 }
 
+//模糊
 Mat blur(Mat m1) {
 	Mat m2 = Mat::zeros(m1.size(), m1.type());
 
 	//blur(m1, m2, Size(10, 10), Point(-1, -1));
-	GaussianBlur(m1, m2, Size(7, 7), 11, 11); //只能用奇数
+	//GaussianBlur(m1, m2, Size(7, 7), 11, 11); //只能用奇数
+	//medianBlur(m1, m2, 7);					//中值
+	bilateralFilter(m1, m2, 13, 50, 3);		//双边
 	return m2;
+}
+
+
+//形态操作
+void pattern(int,void*){
+	int s = element_size * 2 + 1;
+	Mat m2;
+	Mat structureElement = getStructuringElement(MORPH_RECT, Size(s, s), Point(-1, -1));
+	//dilate(m, m2, structureElement, Point(-1, -1)); //膨胀
+	//erode(m, m2, structureElement); //腐蚀
+	//开操作 ，先腐蚀后膨胀，去掉小的对象
+	//morphologyEx(m, m2, CV_MOP_OPEN, structureElement);
+	//闭操作 ，先膨胀后腐蚀，
+	//morphologyEx(m, m2, CV_MOP_CLOSE, structureElement);
+	//梯度
+	//morphologyEx(m, m2, CV_MOP_GRADIENT, structureElement);
+	//morphologyEx(m, m2, CV_MOP_TOPHAT, structureElement);
+	morphologyEx(m, m2, CV_MOP_BLACKHAT, structureElement);
+	imshow("pattern", m2);
+	return ;
+}
+
+
+//从图片里面提取信息
+Mat  getInfo(Mat m1) {
+	Mat mGray;
+	//变成灰度图像
+	cvtColor(m1, mGray, CV_BGRA2GRAY);
+	imshow("Gray", mGray);
+
+	Mat binImg;
+	adaptiveThreshold(~mGray, binImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 15, -1);//这里要取反？？？
+	imshow("Bin", binImg);
+
+	Mat hline = getStructuringElement(MORPH_RECT, Size(m1.cols / 16, 1));
+	//水平结构元素，垂直上的值比较大，所以垂直上的东西都被腐蚀掉了
+	Mat vline = getStructuringElement(MORPH_RECT, Size(1, m1.rows / 16));
+	//垂直结构元素
+	Mat text = getStructuringElement(MORPH_RECT, Size(7, 7)); 
+	//提取文字，之所以会取出文字是因为文字比较粗，其他元素比较细
+	Mat dst, tmp;
+	erode(binImg, tmp, hline);
+	imshow("temp image", tmp);
+	dilate(tmp, dst, hline);
+	//morphologyEx(binImg, dst, CV_MOP_OPEN, text);
+
+	blur(dst, dst, Size(2, 2));
+
+	return dst;
+}
+
+
+//上下采样
+Mat sample(Mat m1) {
+	Mat dst;
+	//pyrUp(m1, dst, Size(m1.cols * 2, m1.rows * 2)); //图片变大2倍
+	pyrDown(m1, dst, Size(m1.cols / 2, m1.rows / 2)); //图片变小2倍
+	return dst;
+}
+
+
+//高斯不同 目前还不知道有什么用
+Mat gussDiff(Mat m1) {
+	Mat tmp,g1, g2, dst;
+	cvtColor(m1, tmp, CV_BGR2GRAY);
+	GaussianBlur(tmp, g1, Size(3, 3), 0, 0);
+	GaussianBlur(g1, g2, Size(3, 3), 0, 0);
+	subtract(g1, g2, dst, Mat());
+	normalize(dst, dst, 255, 0, NORM_MINMAX);
+	return dst;
 }
 int opencvtest()
 {
 	Mat m1 = imread("asset/001.jpg");
 	Mat m2 = imread("asset/002.jpg");
-	if (m1.empty())
-	{
+	Mat m3 = imread("asset/004.png");
+	if (m1.empty()){
 		cout << "fail to load image 1  !" << endl;
 		return -1;
 	}
-	
-	if (m2.empty())
-	{
+	if (m2.empty()){
 		cout << "fail to load image 2 !" << endl;
 		return -1;
 	}
-
+	if (m3.empty()) {
+		cout << "fail to load image 3 !" << endl;
+		return -1;
+	}
 	namedWindow("origin", CV_WINDOW_AUTOSIZE);
-	imshow("origin", m1);
-	
-	namedWindow("opencv test", CV_WINDOW_AUTOSIZE);
-	imshow("opencv test", m2);
+	imshow("origin", m3);
+	/*namedWindow("opencv test", CV_WINDOW_AUTOSIZE);
+	imshow("opencv test", m2);*/
 
-	Mat m3 = blur(m1);
 
-	namedWindow("brightness", CV_WINDOW_AUTOSIZE);
-	imshow("brightness", m3);
+	//m = m1.clone();
+	//namedWindow("pattern", CV_WINDOW_AUTOSIZE);
+	//createTrackbar("Element size:", "pattern", &element_size, 21, pattern);
+	//pattern(0, 0);
 	
+	Mat mx = gussDiff(m1);
+	imshow("sample", mx);
+
+	
+
 	waitKey(0);
 	return 0;
 }
