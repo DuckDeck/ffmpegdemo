@@ -6,7 +6,13 @@ using namespace cv;
 using namespace std;
 
 int element_size = 3;
-Mat m;
+Mat m, res;
+
+int threshold_value = 127;
+int threshold_max = 255;
+int type_value = 2;
+int type_max = 4;
+
 //锐度算法
 Mat acuity(Mat m) {
 	Mat res = Mat::zeros(m.size(), m.type());
@@ -212,6 +218,71 @@ Mat gussDiff(Mat m1) {
 	normalize(dst, dst, 255, 0, NORM_MINMAX);
 	return dst;
 }
+
+void threshold(int, void*) {
+	threshold(m, res, threshold_value, threshold_max, type_value);
+	imshow("threshold", res);
+}
+
+void threshold_oper(Mat m1) {
+	m = m1.clone();
+	cvtColor(m, m, CV_BGR2GRAY);
+	namedWindow("threshold", CV_WINDOW_AUTOSIZE);
+	createTrackbar("threshold value", "threshold", &threshold_value, threshold_max, threshold);
+	createTrackbar("threshold type", "threshold", &type_value, type_max, threshold);
+	threshold(0, 0);
+}
+
+//Sobel算子
+void sobel(Mat m1) {
+	Mat tmp;
+	GaussianBlur(m1, tmp, Size(3, 3), 0);
+	cvtColor(tmp, tmp, CV_BGR2GRAY);
+	Mat xrad, yrad,xyrad;
+	Sobel(tmp, xrad, CV_16S, 1, 0, 3);
+	Sobel(tmp, yrad, CV_16S, 0, 1, 3);
+	//Scharr(tmp, xrad, CV_16S, 1, 0, 3);  //这个API效果太强了
+	//Scharr(tmp, yrad, CV_16S, 0, 1, 3);
+	convertScaleAbs(xrad, xrad);
+	convertScaleAbs(yrad, yrad);
+	imshow("Xrad", xrad);
+	imshow("Yrad", yrad);
+
+	/*addWeighted(xrad, 0.5, yrad, 0.5, 0, xyrad);
+	imshow("XYrad", xyrad);*/
+
+	/*Sobel(tmp, xyrad, CV_16S, 1, 1);
+	convertScaleAbs(xyrad, xyrad);
+	imshow("XYrad", xyrad);*/
+
+
+	xyrad = Mat(xrad.size(), xrad.type());
+	for (int i = 0; i < xrad.rows; i++)
+	{
+		for (int j = 0; j < xrad.cols; j++)
+		{	
+			int xg = xrad.at<uchar>(i, j);
+			int yg = yrad.at<uchar>(i, j);
+			int xy = saturate_cast<uchar>(xg + yg);
+			xyrad.at<uchar>(i, j) = xy;
+		}
+	}
+
+	imshow("XYrad", xyrad);
+}
+
+//Laplance算子
+void laplance(Mat m1) {
+	Mat tmp, res;
+	GaussianBlur(m1, tmp, Size(3, 3), 0);
+	cvtColor(tmp, tmp, CV_BGR2GRAY);
+	Laplacian(tmp, res, CV_16S, 3);
+	convertScaleAbs(res, res);
+	imshow("Laplance", res);
+	threshold(res, res, 0, 255, THRESH_OTSU | THRESH_BINARY);//因为用laplance算子边缘不够明显，所以用了threshold加强一下
+	imshow("Laplance with threshold", res);
+}
+
 int opencvtest()
 {
 	Mat m1 = imread("asset/001.jpg");
@@ -240,10 +311,14 @@ int opencvtest()
 	//createTrackbar("Element size:", "pattern", &element_size, 21, pattern);
 	//pattern(0, 0);
 	
-	Mat mx = gussDiff(m1);
-	imshow("sample", mx);
-
+	//Mat mx = gussDiff(m1);
+	//imshow("sample", mx);
 	
+	//threshold_oper(m2);
+
+	//sobel(m1);
+
+	laplance(m3);
 
 	waitKey(0);
 	return 0;
