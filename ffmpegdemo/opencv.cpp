@@ -7,12 +7,18 @@ using namespace std;
 
 int element_size = 3;
 Mat m, res;
-
-int threshold_value = 127;
+Mat m1;
+Mat m2;
+Mat m3;
+int threshold_value = 12;
 int threshold_max = 255;
 int type_value = 2;
 int type_max = 4;
 
+Scalar randomColor() {
+	RNG rng = RNG(12345);
+	return  Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+}
 //»Ò∂»À„∑®
 Mat acuity(Mat m) {
 	Mat res = Mat::zeros(m.size(), m.type());
@@ -283,11 +289,58 @@ void laplance(Mat m1) {
 	imshow("Laplance with threshold", res);
 }
 
+
+//Canny±ﬂ‘µºÏ≤‚
+void cannyTest(int, void*) {
+	Mat res, dst;
+	
+	blur(m, m, Size(3, 3));
+	Canny(m, res, threshold_value, threshold_value * 2, 3, false);
+	imshow("cannyTest",~res);
+	dst.create(m.size(), m.type());
+	Mat mask = Mat::zeros(m.size(), m.type());
+	m2.copyTo(dst, ~res);
+	imshow("another cannyTest", dst);
+}
+
+
+void houghLine(Mat mx) {
+	Mat tmp,dst;
+	Canny(mx, tmp, 100, 200);
+	imshow("canny", ~tmp);
+	cvtColor(tmp, dst, CV_GRAY2BGR);
+	vector<Vec4f> lines;
+	HoughLinesP(tmp, lines, 1, CV_PI / 180.0, 10, 0, 10);
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		Vec4f l = lines[i];
+		line(dst, Point(l[0], l[1]), Point(l[2], l[3]), randomColor(), 3, LINE_AA);
+	}
+	imshow("Lines", dst);
+}
+
+
+void houghRound(Mat mx) {
+	Mat tmp,dst;
+	medianBlur(mx, tmp, 3);
+	cvtColor(tmp, tmp, CV_BGR2GRAY);
+	vector<Vec3f> points;
+	HoughCircles(tmp, points, CV_HOUGH_GRADIENT, 1, 10, 100, 30, 5, 50);
+	m3.copyTo(dst);
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		Vec3f cc = points[i];
+		circle(dst, Point(cc[0], cc[1]), cc[2], randomColor(), 2, LINE_AA);
+		circle(dst, Point(cc[0], cc[1]), 2, randomColor(), 2, LINE_AA);
+	}
+	imshow("round detect", dst);
+}
+
 int opencvtest()
 {
-	Mat m1 = imread("asset/001.jpg");
-	Mat m2 = imread("asset/002.jpg");
-	Mat m3 = imread("asset/004.png");
+	 m1 = imread("asset/001.jpg");
+	 m2 = imread("asset/002.jpg");
+	 m3 = imread("asset/004.png");
 	if (m1.empty()){
 		cout << "fail to load image 1  !" << endl;
 		return -1;
@@ -318,7 +371,20 @@ int opencvtest()
 
 	//sobel(m1);
 
-	laplance(m3);
+	//laplance(m3);
+
+	
+	/*
+	m = m2.clone();
+	cvtColor(m, m, CV_BGR2GRAY);
+	namedWindow("cannyTest", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Canny value", "cannyTest", &threshold_value, threshold_max, cannyTest);
+	cannyTest(0, 0);
+	*/
+
+	//houghLine(m3);
+
+	houghRound(m3);
 
 	waitKey(0);
 	return 0;
