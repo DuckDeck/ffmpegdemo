@@ -14,7 +14,7 @@ int threshold_value = 12;
 int threshold_max = 255;
 int type_value = 2;
 int type_max = 4;
-
+int index = 0;
 Scalar randomColor() {
 	RNG rng = RNG(12345);
 	return  Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
@@ -336,6 +336,125 @@ void houghRound(Mat mx) {
 	imshow("round detect", dst);
 }
 
+
+//像素重映射
+void pixelReMap(Mat m1) {
+	Mat mat_x, mat_y,dst;
+	mat_x.create(m1.size(), CV_32FC1);
+	mat_y.create(m1.size(), CV_32FC1);
+	for (int i = 0; i < m1.rows; i++)
+	{
+		for (int j = 0; j < m1.cols; j++)
+		{
+			switch (index)
+			{
+			case 0:
+				if (j > m1.cols * 0.25 && j < m1.cols * 0.75 && i > m1.rows * 0.25 && i < m1.rows * 0.75)
+				{
+					mat_x.at<float>(i, j) = 2 * (j - m1.cols * 0.25);
+					mat_y.at<float>(i, j) = 2 * (i - m1.rows * 0.25);
+					//mat_x.at<float>(i, j) = (j - m1.cols * 0.5);
+					//mat_y.at<float>(i, j) = (i - m1.rows * 0.5);
+				}
+				else {
+					mat_x.at<float>(i, j) = 0;
+					mat_y.at<float>(i, j) = 0;
+				}
+				break;
+			case 1:
+				mat_x.at<float>(i, j) = m1.cols - j - 1;
+				mat_y.at<float>(i, j) = i;
+				break;
+			case 2:
+				mat_x.at<float>(i, j) = j;
+				mat_y.at<float>(i, j) = m1.rows - i - 1;
+				break;
+			case 3:
+				mat_x.at<float>(i, j) = m1.cols - j - 1;
+				mat_y.at<float>(i, j) = m1.rows - i - 1;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	remap(m1, dst, mat_x, mat_y, INTER_LINEAR, BORDER_CONSTANT, Scalar(0, 255, 255));
+	imshow("Remap Image", dst);
+	//imshow("mat_x", mat_x); 这个是空白
+}
+
+void changeReMap() {
+	int c = 0;
+	while (true)
+	{
+		c = waitKey(500);
+		printf("%i",c);
+		if (c == -1) {
+			continue;
+		}
+		index = c % 4;
+		if ((char)c == 27)
+		{
+			break;
+		}
+		pixelReMap(m1);
+	}
+}
+
+
+
+//直方图均衡化 可以加强对比度
+void equaliz(Mat m1)
+{
+	Mat tmp,dst;
+	cvtColor(m1, tmp, CV_BGR2GRAY);
+	imshow("灰阶图", tmp);
+	equalizeHist(tmp, dst);
+	imshow("直方图均衡化", dst);
+}
+
+//显示直方图
+void showCalcHist(Mat m1) {
+	//获取三个通道
+	vector<Mat> bgr_channels;
+	split(m1, bgr_channels);
+	//imshow("B channel", bgr_channels[0]);
+	//imshow("G channel", bgr_channels[1]);
+	//imshow("R channel", bgr_channels[2]);
+
+	//获取直方图
+	int histSize = 256;
+	float range[] = { 0,256 };
+	const float *histRagnes = { range };
+	Mat b_hist, g_hist, r_hist;
+	calcHist(&bgr_channels[0], 1, 0, Mat(), b_hist,1, &histSize, &histRagnes, true, false);
+	calcHist(&bgr_channels[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRagnes, true, false);
+	calcHist(&bgr_channels[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRagnes, true, false);
+
+
+	//绘制直方图
+	int hist_h = 400, hist_w = 512;
+	int bin_w = hist_w / histSize;
+	Mat histImage(hist_w, hist_h, CV_8UC3, Scalar(0, 0, 0));
+	normalize(b_hist, b_hist, 0, hist_h, NORM_MINMAX, -1); //转换分辨率
+	normalize(g_hist, g_hist, 0, hist_h, NORM_MINMAX, -1);
+	normalize(r_hist, r_hist, 0, hist_h, NORM_MINMAX, -1);
+
+	for (int i = 1; i < histSize; i++)
+	{
+		line(histImage, Point((i - 1)*bin_w, hist_h - cvRound(b_hist.at<float>(i - 1))),
+			Point(i * bin_w, hist_h - cvRound(b_hist.at<float>(i))), Scalar(255, 0, 0), 2, LINE_AA);
+		line(histImage, Point((i - 1)*bin_w, hist_h - cvRound(g_hist.at<float>(i - 1))),
+			Point(i * bin_w, hist_h - cvRound(g_hist.at<float>(i))), Scalar(0, 255, 0), 2, LINE_AA);
+		line(histImage, Point((i - 1)*bin_w, hist_h - cvRound(r_hist.at<float>(i - 1))),
+			Point(i * bin_w, hist_h - cvRound(r_hist.at<float>(i))), Scalar(0, 0, 255), 2, LINE_AA);
+	}
+	imshow("输出直方图", histImage);
+
+}
+
+
+
 int opencvtest()
 {
 	 m1 = imread("asset/001.jpg");
@@ -354,7 +473,7 @@ int opencvtest()
 		return -1;
 	}
 	namedWindow("origin", CV_WINDOW_AUTOSIZE);
-	imshow("origin", m3);
+	imshow("origin", m2);
 	/*namedWindow("opencv test", CV_WINDOW_AUTOSIZE);
 	imshow("opencv test", m2);*/
 
@@ -384,7 +503,13 @@ int opencvtest()
 
 	//houghLine(m3);
 
-	houghRound(m3);
+	//houghRound(m3);
+	
+	//changeReMap();
+	
+	//equaliz(m1);
+
+	showCalcHist(m2);
 
 	waitKey(0);
 	return 0;
