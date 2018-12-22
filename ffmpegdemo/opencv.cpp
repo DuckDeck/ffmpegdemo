@@ -6,17 +6,21 @@ using namespace cv;
 using namespace std;
 
 int element_size = 3;
-Mat m, res;
-Mat m1;
-Mat m2;
-Mat m3;
+Mat m, res,tmp,dst;
+Mat m1,m2,m3,m4,m5;
+
+Mat hsv, hue;
 int threshold_value = 12;
 int threshold_max = 255;
 int type_value = 2;
 int type_max = 4;
 int index = 0;
+int bins = 12;
+int match_method = CV_TM_SQDIFF;
+int max_track = 5;
 Scalar randomColor() {
-	RNG rng = RNG(12345);
+	RNG rng = RNG(123456789);
+	printf("获取的色%i", rng.uniform(0, 255));
 	return  Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 }
 //锐度算法
@@ -454,12 +458,152 @@ void showCalcHist(Mat m1) {
 }
 
 
+void showCalcImage() {
+	int hist_h = 400, hist_w = 512;
+	Mat histImage(hist_w, hist_h, CV_8UC3, Scalar(0, 0, 0));
+	//normalize(b_hist, b_hist, 0, hist_h, NORM_MINMAX, -1); //转换分辨率
+	//normalize(g_hist, g_hist, 0, hist_h, NORM_MINMAX, -1);
+	//normalize(r_hist, r_hist, 0, hist_h, NORM_MINMAX, -1);
+}
+
+void HistAndback(int, void*) {
+	float range[] = { 0,180 };
+	const float *histRanges = { range };
+	Mat h_hist;
+	calcHist(&hue, 1, 0, Mat(), h_hist, 1, &bins, &histRanges, true, false);
+	normalize(h_hist, h_hist, 0, 255, NORM_MINMAX, -1, Mat());
+	Mat backProjectImage;
+	calcBackProject(&hue, 1, 0, h_hist, backProjectImage, &histRanges, 1, true);
+	imshow("BackProjectImage", backProjectImage);
+
+
+	int hist_h = 400, hist_w = 400;
+	Mat histImage(hist_w, hist_h, CV_8UC3, Scalar(0, 0, 0));
+	int bin_w = hist_w / bins;
+	for (int i = 1; i < bins; i++)
+	{
+		rectangle(histImage, Point((i - 1)*bin_w, cvRound(hist_w - h_hist.at<float>(i - 1) * 400 / 255))
+			, Point(i*bin_w, hist_h), Scalar(0, 0, 255));
+	}
+
+	imshow("Histogram", histImage);
+
+}
+//直方图反射投影
+void calcmap(Mat m1) {
+	cvtColor(m1, hsv, CV_BGR2HSV);
+	hue.create(hsv.size(), hsv.depth());
+	int nchannels[] = { 0, 0 };
+	mixChannels(&hsv, 1, &hue, 1, nchannels, 1);
+	namedWindow("直方图反射投影", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Histogram Bins", "直方图反射投影", &bins, 180, HistAndback);
+	imshow("直方图反射投影", m1);
+	HistAndback(0,0);
+}
+
+//模板匹配
+void matchOper(int, void*) {
+	int width = m.cols - tmp.cols + 1;
+	int height = m.rows - tmp.rows + 1;
+	Mat result(width, height, CV_32FC1);
+	matchTemplate(m, tmp, result, match_method, Mat());
+	normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+
+	Point minLoc, maxLoc;
+	double min, max;
+	m.copyTo(dst);
+	Point temloc;
+	minMaxLoc(result, &min, &max, &minLoc, &maxLoc, Mat());
+	if (match_method == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED) {
+		temloc = minLoc;
+	}
+	else {
+		temloc = maxLoc;
+	}
+
+	//绘制矩形
+	rectangle(dst, Rect(temloc.x, temloc.y, tmp.cols, tmp.rows), Scalar(0, 0, 255), 2, 8);
+	rectangle(result, Rect(temloc.x, temloc.y, tmp.cols, tmp.rows), Scalar(0, 0, 255), 2, 8);
+	imshow("模板匹配", result);
+	imshow("Match", dst);
+	imshow("Match Image", tmp);
+}
+
+void templaTematch() {
+	namedWindow("模板匹配", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Match Algo Type", "模板匹配", &match_method, max_track, matchOper);
+	matchOper(0, 0);
+}
+
+void findBorderCallback(int ,void*) {
+	
+	Mat canny_output;
+	vector<vector<Point>> points;
+	vector<Vec4i> hierachy;
+	Canny(m, canny_output, threshold_value, threshold_value * 2, 3, false);
+	findContours(canny_output, points, hierachy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	dst = Mat::zeros(m.size(), CV_8UC3);
+
+	printf("找出%i条轮廓", points.size());
+
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		drawContours(dst, points, i, randomColor(), 2, 8, hierachy, 0, Point(0, 0));
+	}
+	imshow("轮廓发现", dst);
+}
+
+
+
+//轮廓发现
+void findBorder() {
+	threshold_value = 200;
+	cvtColor(m, m, CV_BGR2GRAY);
+	namedWindow("轮廓发现", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Threshold Value", "轮廓发现", &threshold_value, threshold_max, findBorderCallback);
+	findBorderCallback(0, 0);
+}
+
+
+void topBagCallback(int,void*) {
+	vector<vector<Point>> points;
+	vector<Vec4i> hierachy;
+	threshold(m, tmp, threshold_value, threshold_max, THRESH_BINARY);
+	findContours(tmp, points, hierachy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	vector<vector<Point>> convexhulls(points.size());
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		convexHull(points[i], convexhulls[i], false, true);
+		
+	}
+
+	dst = Mat::zeros(tmp.size(), CV_8UC3);
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		drawContours(dst, convexhulls, i, randomColor(), 2, 8, hierachy, 0, Point(0, 0));
+		drawContours(dst, points, i, randomColor(), 2, 8, hierachy, 0, Point(0, 0));
+	}
+	imshow("凸包", dst);
+
+}
+
+//凸包
+void topBag() {
+	threshold_value = 200;
+	cvtColor(m, m, CV_BGR2GRAY);
+	blur(m, m, Size(3, 3), Point(-1, -1), BORDER_DEFAULT);
+	namedWindow("凸包", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Threshold Value", "凸包", &threshold_value, threshold_max, topBagCallback);
+	topBagCallback(0, 0);
+}
 
 int opencvtest()
 {
 	 m1 = imread("asset/001.jpg");
 	 m2 = imread("asset/002.jpg");
 	 m3 = imread("asset/004.png");
+	 m4 = imread("asset/010.jpg");
+	 m5 = imread("asset/timg.jpg");
 	if (m1.empty()){
 		cout << "fail to load image 1  !" << endl;
 		return -1;
@@ -509,7 +653,18 @@ int opencvtest()
 	
 	//equaliz(m1);
 
-	showCalcHist(m2);
+	//showCalcHist(m2);
+
+
+	//calcmap(m2);
+
+	//m4.copyTo(m);
+	//tmp = imread("asset/match2.jpg");
+	//templaTematch();
+	m3.copyTo(m);
+	//findBorder();
+	
+	//topBag();
 
 	waitKey(0);
 	return 0;
