@@ -3,16 +3,16 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <ReferencePath>C:\SDL2\include;C:\ffmpeg\include;$(ReferencePath)</ReferencePath>
-    <LibraryPath>C:\SDL2\lib\x64;C:\ffmpeg\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>D:\Document\Library\ffmpeg\include;D:\Document\Library\SDL2\include;$(ReferencePath)</ReferencePath>
+    <LibraryPath>D:\Document\Library\SDL2\lib\x64;D:\Document\Library\ffmpeg\bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <AdditionalDependencies>avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\ffmpeg\lib;C:\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Document\Library\ffmpeg\lib;D:\Document\Library\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\SDL2\include;C:\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Document\Library\SDL2\include;D:\Document\Library\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <SDLCheck>false</SDLCheck>
     </ClCompile>
   </ItemDefinitionGroup>
