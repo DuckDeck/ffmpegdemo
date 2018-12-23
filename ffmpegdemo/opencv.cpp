@@ -18,8 +18,8 @@ int index = 0;
 int bins = 12;
 int match_method = CV_TM_SQDIFF;
 int max_track = 5;
+RNG rng = RNG(123456789);
 Scalar randomColor() {
-	RNG rng = RNG(123456789);
 	printf("获取的色%i", rng.uniform(0, 255));
 	return  Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 }
@@ -597,13 +597,119 @@ void topBag() {
 	topBagCallback(0, 0);
 }
 
+
+//轮廓周围绘制矩形和圆形
+//用获取轮廓的物体不能叠加，不然会无法识别
+void drawRectForBorderCallback(int, void*)
+{
+	Mat binary_output;
+	threshold(m, binary_output, threshold_value, threshold_max, THRESH_BINARY);
+	imshow("Binary Image", binary_output);
+	vector<vector<Point>> points;
+	vector<Vec4i> hierachy;
+	//寻找轮廓
+	findContours(binary_output, points, hierachy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(-1, -1));
+	//imshow("轮廓周围绘制矩形和圆形", binary_output);
+	vector<vector<Point>> contours_ploy(points.size());
+	vector<Rect> ploy_rects(points.size());
+	vector<Point2f> css(points.size());
+	vector<float> radius(points.size());
+
+	vector<RotatedRect> min_Rects(points.size());
+	vector<RotatedRect> min_Ellipse(points.size());
+
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		approxPolyDP(Mat(points[i]), contours_ploy[i], 3, true);
+		ploy_rects[i] = boundingRect(contours_ploy[i]);
+		minEnclosingCircle(contours_ploy[i], css[i], radius[i]);
+		if (contours_ploy[i].size() > 5) {
+			min_Rects[i] = minAreaRect(contours_ploy[i]);
+			min_Ellipse[i] = fitEllipse(contours_ploy[i]);
+		}
+		
+
+
+	}
+	m.copyTo(dst);						//如果只用原来的图
+	//dst = Mat::zeros(m.size(), m.type()); //如果只用黑色的
+	Point2f pts[4];
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		//rectangle(dst, ploy_rects[i], randomColor(), 2, 8);
+		//circle(dst, css[i], radius[i], randomColor(), 1, 8);
+		ellipse(dst, min_Ellipse[i], randomColor(), 1, 8);
+		if (points[i].size() > 5) {
+			min_Rects[i].points(pts);
+			for (int j = 0; j < 4; j++)
+			{
+				line(dst, pts[j], pts[(j + 1) % 4], randomColor(), 1, 8);
+			}
+		}
+	}
+	imshow("轮廓周围绘制矩形和圆形", dst);
+
+
+}
+void drawRectForBorder() {
+	//这里要用egg2这张图片
+	threshold_value = 230;  //246是最完美的
+	cvtColor(m, m, CV_BGR2GRAY);
+	blur(m, m, Size(3, 3), Point(-1, -1), BORDER_DEFAULT);
+	namedWindow("轮廓周围绘制矩形和圆形", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Threshold Value", "轮廓周围绘制矩形和圆形", &threshold_value, threshold_max, drawRectForBorderCallback);
+	drawRectForBorderCallback(0, 0);
+}
+
+void imageMatrixCallback(int,void*) {
+	Mat canny_output;
+	vector<vector<Point>> points;
+	vector<Vec4i> hierachy;
+	Canny(m, canny_output, threshold_value, threshold_value * 2, 3, false);
+	findContours(canny_output, points, hierachy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	
+	vector<Moments> contours_moments(points.size());
+	vector<Point2f> css(points.size());
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		contours_moments[i] = moments(points[i]);
+		css[i] = Point(static_cast<float>(contours_moments[i].m10 / contours_moments[i].m00),
+			static_cast<float>(contours_moments[i].m10 / contours_moments[i].m00));
+	}
+	dst = Mat::zeros(m.size(), CV_8UC3);
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		if (points[i].size() < 30) {
+			continue;
+		}
+		printf("Center point X: %.2f  Y: %.2f  \n", css[i].x, css[i].y);
+		printf("Countour %d area :%.2f,arc length :%.2f\n", i, contourArea(points[i]), arcLength(points[i],true));
+		drawContours(dst, points, i, randomColor());
+		circle(dst, css[i], 1, randomColor(), 1, 8);
+	}
+	imshow("图像矩", dst);
+
+
+}
+
+//图像矩
+void imageMatrix() {
+	//这里要用bubble这张图片
+	threshold_value = 80;
+	cvtColor(m, m, CV_BGR2GRAY);
+	GaussianBlur(m, m, Size(3, 3), 0, 0);
+	namedWindow("图像矩", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Threshold Value", "图像矩", &threshold_value, threshold_max, imageMatrixCallback);
+	imageMatrixCallback(0, 0);
+}
+
 int opencvtest()
 {
 	 m1 = imread("asset/001.jpg");
 	 m2 = imread("asset/002.jpg");
 	 m3 = imread("asset/004.png");
 	 m4 = imread("asset/010.jpg");
-	 m5 = imread("asset/timg.jpg");
+	 m5 = imread("asset/bubble.jpg");
 	if (m1.empty()){
 		cout << "fail to load image 1  !" << endl;
 		return -1;
@@ -617,7 +723,7 @@ int opencvtest()
 		return -1;
 	}
 	namedWindow("origin", CV_WINDOW_AUTOSIZE);
-	imshow("origin", m2);
+	imshow("origin", m5);
 	/*namedWindow("opencv test", CV_WINDOW_AUTOSIZE);
 	imshow("opencv test", m2);*/
 
@@ -661,10 +767,13 @@ int opencvtest()
 	//m4.copyTo(m);
 	//tmp = imread("asset/match2.jpg");
 	//templaTematch();
-	m3.copyTo(m);
+	m5.copyTo(m);
 	//findBorder();
 	
 	//topBag();
+	//drawRectForBorder();
+
+	imageMatrix();
 
 	waitKey(0);
 	return 0;
