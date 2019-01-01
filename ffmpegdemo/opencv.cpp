@@ -703,13 +703,34 @@ void imageMatrix() {
 	imageMatrixCallback(0, 0);
 }
 
+
+
+//æ‡¿Î±‰ªªÕºœÒ∑÷∏Ó
+void imagesplit() {
+	for (size_t i = 0; i < m.rows; i++)
+	{
+		for (size_t j = 0; j < m.cols; j++)
+		{
+			printf("color: %d__%d_%d \n", m.at<Vec3b>(i, j)[0], m.at<Vec3b>(i, j)[1], m.at<Vec3b>(i, j)[1]);
+
+			if (m.at<Vec3b>(i, j) == Vec3b(255, 255, 255)) {
+				m.at<Vec3b>(i, j)[0] = 0;
+				m.at<Vec3b>(i, j)[1] = 0;
+				m.at<Vec3b>(i, j)[2] = 0;
+			}
+		}
+	}
+
+	imshow("remove bg", m);
+}
+
 int opencvtest()
 {
 	 m1 = imread("asset/001.jpg");
 	 m2 = imread("asset/002.jpg");
 	 m3 = imread("asset/004.png");
 	 m4 = imread("asset/010.jpg");
-	 m5 = imread("asset/bubble.jpg");
+	 m5 = imread("asset/poke.jpg");
 	if (m1.empty()){
 		cout << "fail to load image 1  !" << endl;
 		return -1;
@@ -773,7 +794,11 @@ int opencvtest()
 	//topBag();
 	//drawRectForBorder();
 
-	imageMatrix();
+	//imageMatrix();
+
+
+
+	imagesplit();
 
 	waitKey(0);
 	return 0;
