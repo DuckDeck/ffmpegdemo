@@ -166,6 +166,7 @@
     <ClCompile Include="Chapter2.cpp" />
     <ClCompile Include="face.cpp" />
     <ClCompile Include="ffmpegdemo.cpp" />
+    <ClCompile Include="ImageToText.cpp" />
     <ClCompile Include="opencv.cpp" />
     <ClCompile Include="pcm_to_aac.cpp" />
     <ClCompile Include="play_with_face.cpp" />

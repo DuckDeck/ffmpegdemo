@@ -54,11 +54,9 @@ void playVideoWithDrag() {
 			if (frame.empty()) {
 				break;
 			}
-			int current_pos = g_cap.get(CAP_PROP_POS_FRAMES);
+			int current_pos = g_cap.get(CAP_PROP_POS_FRAMES);  //获取到当前frame
 			g_dontset = 1;
 			setTrackbarPos("Position", "Video", current_pos);
-
-
 			imshow("Video", frame);
 			g_run -= 1;
 		}
