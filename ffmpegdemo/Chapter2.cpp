@@ -82,7 +82,7 @@ void openCamera() {
 	VideoCapture cap;
 	
 	cap.open(-1);
-	//死活打不开摄像头
+	//死活打不开摄像头 
 	if (!cap.isOpened()) {
 		std::cerr << "Could not open capture" << endl;
 	}
@@ -94,7 +94,7 @@ int learnOpenCV1()
 
 	//playVideo();
 	//playVideoWithDrag();
-	openCamera();
+	//openCamera();
 	waitKey(0);
 	return 0;
 }
