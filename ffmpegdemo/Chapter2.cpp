@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include <opencv2/highgui.hpp>
 #include <iostream>
-#include <fstream>
+
 using namespace cv;
 using namespace std;
 
@@ -37,7 +37,7 @@ void onTrackbarSilde(int pos, void *) {
 
 void playVideoWithDrag() {
 	namedWindow("Video", WINDOW_AUTOSIZE);
-	
+
 	g_cap.open("asset/face.mp4");
 	int frames = g_cap.get(CAP_PROP_FRAME_COUNT);
 	int tmpw = g_cap.get(CAP_PROP_FRAME_WIDTH);
@@ -72,7 +72,7 @@ void playVideoWithDrag() {
 		if (c == 27) {
 			break;
 		}
-		
+
 	}
 
 }
@@ -80,12 +80,43 @@ void playVideoWithDrag() {
 void openCamera() {
 	namedWindow("Video", WINDOW_AUTOSIZE);
 	VideoCapture cap;
-	
+
 	cap.open(-1);
-	//死活打不开摄像头 
+	//死活打不开摄像头 ,文件也打不开？ 不是死活打不开，是没有用代码展示出来
+	//好像还是不行
 	if (!cap.isOpened()) {
 		std::cerr << "Could not open capture" << endl;
 	}
+	Mat frame;
+	for (;;) {
+		cap >> frame;
+		if (frame.empty()) break;
+		imshow("Video", frame);
+		if (waitKey(33) >= 0)break;
+	}
+}
+
+void writeAVIFile(){
+	namedWindow("Write AVI", WINDOW_AUTOSIZE);
+	namedWindow("Log Polar", WINDOW_AUTOSIZE);
+
+	g_cap.open("asset/test.mp4");
+	double fps = g_cap.get(CAP_PROP_FPS);
+	Size size((int)g_cap.get(CAP_PROP_FRAME_WIDTH), (int)g_cap.get(CAP_PROP_FRAME_HEIGHT));
+	VideoWriter vWriter;
+	vWriter.open("assert/test1.mp4", CAP_OPENCV_MJPEG, fps, size,true);
+	//报错写不出来，可能是格式不支持
+	Mat logpolar_frame, bgr_frame;
+	for (;;) {
+		g_cap >> bgr_frame;
+		if (bgr_frame.empty())break;
+		imshow("Write AVI", bgr_frame);
+		logPolar(bgr_frame, logpolar_frame, Point2f(bgr_frame.cols / 2, bgr_frame.rows / 2), 100, WARP_FILL_OUTLIERS);
+		imshow("Log Polar", logpolar_frame);
+		vWriter << logpolar_frame;
+		if (waitKey(33) >= 0)break;
+	}
+	g_cap.release();
 }
 
 int learnOpenCV1()
@@ -95,6 +126,7 @@ int learnOpenCV1()
 	//playVideo();
 	//playVideoWithDrag();
 	//openCamera();
+	writeAVIFile();
 	waitKey(0);
 	return 0;
 }
