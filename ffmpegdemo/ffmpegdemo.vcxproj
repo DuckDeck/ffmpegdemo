@@ -164,6 +164,7 @@
     <ClCompile Include="basic.cpp" />
     <ClCompile Include="catpure_jpg.cpp" />
     <ClCompile Include="Chapter2.cpp" />
+    <ClCompile Include="Chapter4.cpp" />
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="face.cpp" />
     <ClCompile Include="ffmpegdemo.cpp" />

@@ -79,5 +79,8 @@
     <ClCompile Include="cube.cpp">
       <Filter>源文件\LearnOpenCV</Filter>
     </ClCompile>
+    <ClCompile Include="Chapter4.cpp">
+      <Filter>源文件\LearnOpenCV</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
