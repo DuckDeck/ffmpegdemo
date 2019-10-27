@@ -92,11 +92,87 @@ void practice1() {
 	
 }
 
+list<string> contents;
 
+void practice1better() {
+	int numOfLines = 24;
+	int top = 20;
+	while (true)
+	{
+		current = Mat::zeros(500, 500, CV_8UC3);
+		int s = waitKeyEx(0);
+		if (s == 13) { //回车
+			contents.push_back("");
+		
+			continue;
+		}
+		if (s == 8) {
+			if (contents.empty()) {
+				continue;
+			}
+			if (contents.back().length() == 1) {
+				contents.pop_back();
+			}
+			else {
+				contents.back() = 	contents.back().substr(0, contents.back().length() - 1);
+			}
+			
+		}
+		else if (s == 249386) {
+
+		}
+		else if (s == 2424832) {
+
+		}
+		else if (s == 2621440) {
+
+		}
+		else if (s == 2555904) {
+
+		}
+		else {
+			const char c = (char)s;
+			cout << s << endl;
+			if (contents.empty()) {
+				contents.push_back("");
+			}
+			string last = contents.back();
+			if (last.length() == numOfLines) {
+				contents.push_back("");
+			}
+			/*last = contents.back();
+			last += c;*/
+			contents.back() += c;
+		}
+
+
+		list<string>::iterator itor;
+		itor = contents.begin();
+		int index = 0;
+		while (itor != contents.end())
+		{
+			//cout << *itor++ << endl;
+			string value = *itor++;
+			putText(current,value, Point(5, top), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+			if (index == contents.size() - 1) {
+				int left = 5 + 20 * value.length();
+				rectangle(current, Rect(left - 20, top - 20, 20, 23), Scalar(0, 255, 0), 1);
+			}
+			imshow("dstImage", current);
+			top = top + 25;
+			index += 1;
+		}
+		
+		if (top >= 500) {
+			break;
+		}
+		top = 20; //要复位一下
+	}
+}
 
 int learnOpenCV4()
 {
-	practice1();
+	practice1better();
 	
 	waitKey(0);
 	return 0;
