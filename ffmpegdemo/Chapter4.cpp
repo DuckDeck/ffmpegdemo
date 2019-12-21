@@ -93,13 +93,14 @@ void practice1() {
 }
 
 list<string> contents;
-
+Rect frame;
 void practice1better() {
 	int numOfLines = 24;
 	int top = 20;
 	while (true)
 	{
 		current = Mat::zeros(500, 500, CV_8UC3);
+		
 		int s = waitKeyEx(0);
 		if (s == 13) { //回车
 			contents.push_back("");
@@ -118,19 +119,45 @@ void practice1better() {
 			}
 			
 		}
-		else if (s == 249386) {
-
+		else if (s == 2490368) {
+			if (frame.y >= 25) {  
+				frame.y -= 25;
+			}
 		}
 		else if (s == 2424832) {
-
+			if (frame.x >= 25) {
+				frame.x -= 20;
+			}
 		}
+		//下面的判断方式其实并不好，先这样吧，还有两个小需求没弄好
 		else if (s == 2621440) {
+			if (frame.y + 60 <= contents.size() * 25 ) {  //如果不是最下面一行，随便跳
+				
+				frame.y += 25;
+			}
+			else if (frame.y + 40 <= contents.size() * 25) { //如果是最下面一行，要判断有没有超过最下面的边界
 
+				if (frame.x < 5 + 20 * contents.back().length()) {
+					frame.y += 25;
+				}
+			}
+
+			
 		}
 		else if (s == 2555904) {
-
+			
+			if (frame.y + 40 <= contents.size() * 25) {// 如果是最上面的
+				if (frame.x + 20 < 480) {
+					frame.x += 20;
+				}
+			}
+			else {
+				if (frame.x + 20 < 5 + 20 * contents.back().length()) { //最下面的
+					frame.x += 20;
+				}
+			}
 		}
-		else {
+		if((s >= 48 && s <= 57) || s == -1 ) {
 			const char c = (char)s;
 			cout << s << endl;
 			if (contents.empty()) {
@@ -155,8 +182,11 @@ void practice1better() {
 			string value = *itor++;
 			putText(current,value, Point(5, top), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
 			if (index == contents.size() - 1) {
-				int left = 5 + 20 * value.length();
-				rectangle(current, Rect(left - 20, top - 20, 20, 23), Scalar(0, 255, 0), 1);
+				if (s != 2490368 && s != 2424832 && s != 2621440 && s != 2555904) {
+					int left = 5 + 20 * value.length();
+					frame = Rect(left - 20, top - 20, 20, 23);
+				}
+				rectangle(current, frame, Scalar(0, 255, 0), 1);
 			}
 			imshow("dstImage", current);
 			top = top + 25;
@@ -169,6 +199,8 @@ void practice1better() {
 		top = 20; //要复位一下
 	}
 }
+
+
 
 int learnOpenCV4()
 {
